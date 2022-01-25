@@ -166,6 +166,7 @@ systemctl status miaokeeper.service                 #查看miaokeeper状态
 /check_credit         #查看某群友积分
 /set_antispoiler      #是否开启剧透
 /set_channel          #绑定频道（回复空则解绑频道） 要把bot扔进频道给管理
+/set_locale           #设置群组的默认语言，可加一个参数，如果是 - 则为清空设置
 /send_redpacket       #发运气红包
 /create_lottery       #开启抽奖  create_lottery 奖品名称 :limit=所需积分:consume=（n|y）是否扣除积分 :num=奖品数量 :participant=参与人数
 /creditrank           #开榜获取积分排行榜
