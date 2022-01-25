@@ -18,4 +18,6 @@ WORKDIR /miaokeeper/
 COPY --from=builder /root/miaokeeper /miaokeeper/miaokeeper
 VOLUME /miaokeeper/
 
+EXPOSE 9876
+
 ENTRYPOINT ["/miaokeeper/miaokeeper"]

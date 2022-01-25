@@ -137,6 +137,9 @@ systemctl status miaokeeper.service                 #查看miaokeeper状态
 -upstream string       #电报上游api url
 -verbose               #显示所有日志
 -version               #显示当前版本并退出
+
+-bind                  #启用API服务器并绑定端口
+-api-token             #给API服务器增加验证，建议前置增加 https 反向代理来确保安全性
 ```
 
 ## 机器人常用命令参数  
