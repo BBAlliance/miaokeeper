@@ -31,11 +31,11 @@ const (
 )
 
 type CreditInfo struct {
-	Username string
-	Name     string
-	ID       int64
-	Credit   int64
-	GroupId  int64
+	Username string `json:"username"`
+	Name     string `json:"nickname"`
+	ID       int64  `json:"id"`
+	Credit   int64  `json:"credit"`
+	GroupId  int64  `json:"groupId"`
 }
 
 var GroupConfigCache map[int64]*GroupConfig
@@ -299,6 +299,9 @@ func GetCredit(groupId, userId int64) *CreditInfo {
 	if err != nil {
 		DLogf("Database Credit Read Error | gid=%d uid=%d error=%s", groupId, userId, err.Error())
 	}
+	if ret.ID == userId {
+		ret.GroupId = groupId
+	}
 	return ret
 }
 
@@ -308,6 +311,9 @@ func GetCreditRank(groupId int64, limit int) []*CreditInfo {
 	for row.Next() {
 		ret := &CreditInfo{}
 		row.Scan(&ret.ID, &ret.Name, &ret.Username, &ret.Credit)
+		if ret.ID > 0 {
+			ret.GroupId = groupId
+		}
 		returns = append(returns, ret)
 	}
 	row.Close()

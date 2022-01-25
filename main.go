@@ -49,6 +49,9 @@ func main() {
 	}
 
 	InitTelegram()
+	if APIBind > 0 {
+		InitRESTServer(APIBind, APIToken)
+	}
 
 	<-MakeSysChan()
 	DInfo("shutting down.")
@@ -63,6 +66,9 @@ func init() {
 	flag.BoolVar(&ping, "ping", false, "test the round time trip between bot and telegram server")
 	flag.BoolVar(&escape, "escape", false, "ignore all messages from polling")
 	flag.Int64Var(&setadmin, "setadmin", 0, "set admin and delete all the other existing admins")
+
+	flag.IntVar(&APIBind, "bind", 0, "specify a point number to bind and start an api server, for example 9876")
+	flag.StringVar(&APIToken, "api-token", "", "specify a token that needs to be passed in when calling api methods")
 
 	flag.Parse()
 }

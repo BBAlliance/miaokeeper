@@ -23,6 +23,9 @@ var Bot *tb.Bot
 var TOKEN = ""
 var TELEGRAMURL = ""
 
+var APIBind = 0
+var APIToken = ""
+
 var GROUPS = []int64{}
 var ADMINS = []int64{}
 
