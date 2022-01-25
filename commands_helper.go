@@ -83,7 +83,7 @@ func CheckChannelFollow(m *tb.Message, user *tb.User, isJoin bool) bool {
 		// ignore bot
 		if user.IsBot {
 			if showExceptDialog {
-				SmartSendDelete(m.Chat, fmt.Sprintf(Locale("channel.bot.permit", user.LanguageCode), usrName))
+				SmartSendDelete(m.Chat, fmt.Sprintf(Locale("channel.bot.permit", GetSenderLocale(m)), usrName))
 			}
 			return true
 		}
@@ -96,7 +96,7 @@ func CheckChannelFollow(m *tb.Message, user *tb.User, isJoin bool) bool {
 		usrStatus := UserIsInGroup(gc.MustFollow, user.ID)
 		if usrStatus == UIGIn {
 			if showExceptDialog {
-				SmartSendDelete(m.Chat, fmt.Sprintf(Locale("channel.user.alreadyFollowed", user.LanguageCode), usrName))
+				SmartSendDelete(m.Chat, fmt.Sprintf(Locale("channel.user.alreadyFollowed", GetSenderLocale(m)), usrName))
 			}
 		} else if usrStatus == UIGOut {
 			chatId, userId := m.Chat.ID, user.ID
@@ -106,21 +106,21 @@ func CheckChannelFollow(m *tb.Message, user *tb.User, isJoin bool) bool {
 				Bot.Delete(m)
 				return false
 			}
-			msg, err := SendBtnsMarkdown(m.Chat, fmt.Sprintf(Locale("channel.request", user.LanguageCode), userId, usrName), "", []string{
-				fmt.Sprintf(Locale("btn.channel.step1", user.LanguageCode), strings.TrimLeft(gc.MustFollow, "@")),
-				fmt.Sprintf(Locale("btn.channel.step2", user.LanguageCode), chatId, userId),
-				fmt.Sprintf(Locale("btn.adminPanel", user.LanguageCode), chatId, userId, 0, chatId, userId, 0),
+			msg, err := SendBtnsMarkdown(m.Chat, fmt.Sprintf(Locale("channel.request", GetSenderLocale(m)), userId, usrName), "", []string{
+				fmt.Sprintf(Locale("btn.channel.step1", GetSenderLocale(m)), strings.TrimLeft(gc.MustFollow, "@")),
+				fmt.Sprintf(Locale("btn.channel.step2", GetSenderLocale(m)), chatId, userId),
+				fmt.Sprintf(Locale("btn.adminPanel", GetSenderLocale(m)), chatId, userId, 0, chatId, userId, 0),
 			})
 			if msg == nil || err != nil {
 				if showExceptDialog {
-					SmartSendDelete(m.Chat, Locale("channel.cannotSendMsg", user.LanguageCode))
+					SmartSendDelete(m.Chat, Locale("channel.cannotSendMsg", GetSenderLocale(m)))
 				}
 				joinmap.Unset(joinVerificationId)
 			} else {
 				if Ban(chatId, userId, 0) != nil {
 					LazyDelete(msg)
 					if showExceptDialog {
-						SmartSendDelete(m.Chat, Locale("channel.cannotBanUser", user.LanguageCode))
+						SmartSendDelete(m.Chat, Locale("channel.cannotBanUser", GetSenderLocale(m)))
 					}
 					joinmap.Unset(joinVerificationId)
 				} else {
@@ -130,7 +130,7 @@ func CheckChannelFollow(m *tb.Message, user *tb.User, isJoin bool) bool {
 							cm, err := Bot.ChatMemberOf(&tb.Chat{ID: chatId}, &tb.User{ID: userId})
 							if err != nil || cm.Role == tb.Restricted || cm.Role == tb.Kicked || cm.Role == tb.Left {
 								Kick(chatId, userId)
-								SmartSend(m.Chat, fmt.Sprintf(Locale("channel.kicked", user.LanguageCode), userId), &tb.SendOptions{
+								SmartSend(m.Chat, fmt.Sprintf(Locale("channel.kicked", GetSenderLocale(m)), userId), &tb.SendOptions{
 									ParseMode:             "Markdown",
 									DisableWebPagePreview: true,
 									AllowWithoutReply:     true,
@@ -144,7 +144,7 @@ func CheckChannelFollow(m *tb.Message, user *tb.User, isJoin bool) bool {
 			}
 		} else {
 			if showExceptDialog {
-				SmartSendDelete(m.Chat, Locale("channel.cannotCheckChannel", user.LanguageCode))
+				SmartSendDelete(m.Chat, Locale("channel.cannotCheckChannel", GetSenderLocale(m)))
 			}
 		}
 	}

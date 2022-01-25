@@ -112,6 +112,7 @@ func InitTelegram() {
 		Bot.Handle("/check_credit", CmdCheckCredit)
 		Bot.Handle("/set_antispoiler", CmdSetAntiSpoiler)
 		Bot.Handle("/set_channel", CmdSetChannel)
+		Bot.Handle("/set_locale", CmdSetLocale)
 		Bot.Handle("/send_redpacket", CmdSendRedpacket)
 		Bot.Handle("/create_lottery", CmdCreateLottery)
 

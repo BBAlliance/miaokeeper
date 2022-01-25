@@ -42,7 +42,7 @@ func CmdOnCallback(c *tb.Callback) {
 				} else {
 					Rsp(c, "cb.unban.failure")
 				}
-				SmartEdit(m, m.Text+Locale("cb.unblock.byadmin", c.Sender.LanguageCode))
+				SmartEdit(m, m.Text+Locale("cb.unblock.byadmin", GetSenderLocaleCallback(c)))
 				joinmap.Unset(joinVerificationId)
 				if secuid > 0 && votemap.Exist(vtToken) {
 					addCredit(gid, &tb.User{ID: uid}, 50, true)
@@ -57,7 +57,7 @@ func CmdOnCallback(c *tb.Callback) {
 				}
 				joinmap.Unset(joinVerificationId)
 				votemap.Unset(vtToken)
-				SmartEdit(m, m.Text+Locale("cb.kicked.byadmin", c.Sender.LanguageCode))
+				SmartEdit(m, m.Text+Locale("cb.kicked.byadmin", GetSenderLocaleCallback(c)))
 			} else if cmd == "check" {
 				if uid == c.Sender.ID {
 					usrStatus := UserIsInGroup(gc.MustFollow, uid)
@@ -83,7 +83,7 @@ func CmdOnCallback(c *tb.Callback) {
 						if votes >= 6 {
 							Unban(gid, uid, 0)
 							votemap.Unset(vtToken)
-							SmartEdit(m, m.Text+Locale("cb.unblock.byvote", c.Sender.LanguageCode))
+							SmartEdit(m, m.Text+Locale("cb.unblock.byvote", GetSenderLocaleCallback(c)))
 							addCredit(gid, &tb.User{ID: uid}, 50, true)
 							if secuid > 0 {
 								addCredit(gid, &tb.User{ID: secuid}, -15, true)
@@ -132,7 +132,7 @@ func CmdOnCallback(c *tb.Callback) {
 								redpacketmap.Set(redpacketBestKey, amount)
 								redpacketrankmap.Set(redpacketBestKey, GetQuotableUserName(c.Sender))
 							}
-							Rsp(c, Locale("cb.rp.get.1", c.Sender.LanguageCode)+strconv.Itoa(amount)+Locale("cb.rp.get.2", c.Sender.LanguageCode))
+							Rsp(c, Locale("cb.rp.get.1", c.Sender.LanguageCode)+strconv.Itoa(amount)+Locale("cb.rp.get.2", GetSenderLocaleCallback(c)))
 							addCredit(gid, c.Sender, int64(amount), true)
 						}
 

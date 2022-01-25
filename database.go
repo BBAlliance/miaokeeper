@@ -45,6 +45,7 @@ type GroupConfig struct {
 	Admins        []int64
 	BannedForward []int64
 
+	Locale           string
 	MustFollow       string
 	MustFollowOnJoin bool
 	MustFollowOnMsg  bool

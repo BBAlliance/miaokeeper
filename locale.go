@@ -1,5 +1,7 @@
 package main
 
+import tb "gopkg.in/tucnak/telebot.v2"
+
 var LocaleAlias = map[string]string{
 	"zh-hans": "zh",
 	"zh-hant": "zh",
@@ -94,6 +96,9 @@ var LocaleMap = map[string]map[string]string{
 		"channel.cannotBanUser":        "❌ 无法完成验证流程，请管理员检查机器人封禁权限 ～",
 		"channel.cannotCheckChannel":   "❌ 无法检测用户是否在目标频道内，请管理员检查机器人权限 ～",
 		"channel.kicked":               "👀 [TA](tg://user?id=%d) 没有在规定时间内完成验证，已经被我带走啦 ～",
+
+		"locale.set": "✔️ 设置成功，当前群组的默认语言为: %s ～",
+		"locale.get": "👀 当前群组的默认语言为: %s ～",
 
 		// not support yet
 		"btn.rp.draw": "🤏 我要抢红包|rp/%d/1/%d",
@@ -222,6 +227,9 @@ var LocaleMap = map[string]map[string]string{
 		"channel.cannotCheckChannel":   "❌ Cannot read the user list of targetted channel, please make sure the bot has enough permission in the channel ～",
 		"channel.kicked":               "👀 [The user](tg://user?id=%d) did not pass the MFC verification, so it is banned ～",
 
+		"locale.set": "✔️ The default language of this group has been changed to: %s ～",
+		"locale.get": "👀 The default language of this group is: %s ～",
+
 		// not support yet
 		// "btn.rp.draw": "🤏 我要抢红包|rp/%d/1/%d",
 		// "btn.notFair": "😠 这不公平 (%d)|vt/%d/%d/%d",
@@ -283,4 +291,32 @@ func Locale(identifier string, locale string) string {
 	}
 
 	return identifier
+}
+
+func GetUserLocale(c *tb.Chat, u *tb.User) string {
+	if u != nil && u.LanguageCode != "" {
+		return u.LanguageCode
+	}
+
+	if c != nil {
+		gc := GetGroupConfig(c.ID)
+		if gc.Locale != "" {
+			return gc.Locale
+		}
+	}
+
+	return DEFAULT_LANG
+}
+
+func GetSenderLocale(m *tb.Message) string {
+	user := m.Sender
+	if m.UserJoined != nil {
+		user = m.UserJoined
+	}
+
+	return GetUserLocale(m.Chat, user)
+}
+
+func GetSenderLocaleCallback(c *tb.Callback) string {
+	return GetUserLocale(c.Message.Chat, c.Sender)
 }
