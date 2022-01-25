@@ -66,6 +66,10 @@ func InitRESTServer(portNum int, token string) {
 	r := gin.New()
 	r.Use(gin.Recovery())
 
+	r.NoRoute(func(c *gin.Context) {
+		c.JSON(http.StatusNotFound, GinError("endpoint not found"))
+	})
+
 	authorized := r.Group("/")
 	authorized.Use(MiddlewareAuthorization(token))
 
