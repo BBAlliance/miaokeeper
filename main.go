@@ -38,6 +38,7 @@ func main() {
 		DErrorE(err, "Database Error | Cannot initialize database.")
 		os.Exit(1)
 	}
+	DInfo("Database Init | Database is initialzed.")
 
 	InitTables()
 	ReadConfigs()

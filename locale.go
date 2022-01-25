@@ -272,6 +272,16 @@ var LocaleMap = map[string]map[string]string{
 
 const DEFAULT_LANG = "en"
 
+func HasLocale(identifier string) bool {
+	if _, ok := LocaleAlias[identifier]; ok {
+		return true
+	}
+	if _, ok := LocaleMap[identifier]; ok {
+		return true
+	}
+	return false
+}
+
 func Locale(identifier string, locale string) string {
 	// process alias
 	if alias, ok := LocaleAlias[locale]; ok && alias != "" {
@@ -294,13 +304,13 @@ func Locale(identifier string, locale string) string {
 }
 
 func GetUserLocale(c *tb.Chat, u *tb.User) string {
-	if u != nil && u.LanguageCode != "" {
+	if u != nil && u.LanguageCode != "" && HasLocale(u.LanguageCode) {
 		return u.LanguageCode
 	}
 
 	if c != nil {
 		gc := GetGroupConfig(c.ID)
-		if gc.Locale != "" {
+		if gc.Locale != "" && HasLocale(gc.Locale) {
 			return gc.Locale
 		}
 	}
