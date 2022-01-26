@@ -637,7 +637,7 @@ func CmdMyCredit(m *tb.Message) {
 }
 
 func CmdVersion(m *tb.Message) {
-	SmartSendDelete(m, fmt.Sprintf(Locale("cmd.misc.version", GetSenderLocale(m)), VERSION))
+	SmartSendDelete(m, fmt.Sprintf(Locale("cmd.misc.version", GetSenderLocale(m)), version))
 	LazyDelete(m)
 }
 

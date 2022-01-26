@@ -7,18 +7,18 @@ import (
 	"time"
 )
 
-var version = false
-var ping = false
-var escape = false
+var VersionArg = false
+var PingArg = false
+var CleanArg = false
 var setadmin = int64(0)
 
 func main() {
-	if version {
-		fmt.Println(VERSION)
+	if VersionArg {
+		fmt.Println(version)
 		os.Exit(0)
 	}
 
-	if ping {
+	if PingArg {
 		InitTelegram()
 		t := time.Now().UnixMilli()
 		Bot.GetCommands()
@@ -62,9 +62,9 @@ func init() {
 	flag.StringVar(&TELEGRAMURL, "upstream", "", "telegram upstream api url")
 	flag.StringVar(&DBCONN, "database", "", "mysql or its compatible database connection URL")
 	flag.BoolVar(&VerboseMode, "verbose", false, "display all logs")
-	flag.BoolVar(&version, "version", false, "display current version and exit")
-	flag.BoolVar(&ping, "ping", false, "test the round time trip between bot and telegram server")
-	flag.BoolVar(&escape, "escape", false, "ignore all messages from polling")
+	flag.BoolVar(&VersionArg, "version", false, "display current version and exit")
+	flag.BoolVar(&PingArg, "ping", false, "test the round time trip between bot and telegram server")
+	flag.BoolVar(&CleanArg, "clean", false, "ignore all messages from polling")
 	flag.Int64Var(&setadmin, "setadmin", 0, "set admin and delete all the other existing admins")
 
 	flag.IntVar(&APIBind, "bind", 0, "specify a point number to bind and start an api server, for example 9876")
