@@ -129,7 +129,7 @@ func CheckChannelFollow(m *tb.Message, user *tb.User, isJoin bool) bool {
 						if joinmap.Exist(joinVerificationId) {
 							cm, err := Bot.ChatMemberOf(&tb.Chat{ID: chatId}, &tb.User{ID: userId})
 							if err != nil || cm.Role == tb.Restricted || cm.Role == tb.Kicked || cm.Role == tb.Left {
-								Kick(chatId, userId)
+								KickOnce(chatId, userId)
 								SmartSend(m.Chat, fmt.Sprintf(Locale("channel.kicked", GetSenderLocale(m)), userId), &tb.SendOptions{
 									ParseMode:             "Markdown",
 									DisableWebPagePreview: true,
