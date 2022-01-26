@@ -1,0 +1,26 @@
+name: Release Tags
+
+on:
+  push:
+    tags: [ 'v*.*.*' ]
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Setup golang environment
+        uses: actions/setup-go@v1
+        with:
+          go-version: 1.17
+        id: go
+      - name: Checkout to the tag branch
+        uses: actions/checkout@v1
+      - name: Download dependencies
+        run: go mod download
+      - name: Release tag
+        uses: goreleaser/goreleaser-action@v2
+        with:
+          version: latest
+          args: release
+        env:
+          GITHUB_TOKEN: ${{ secrets.GORELEASER_GITHUB_TOKEN }}
