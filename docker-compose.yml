@@ -50,6 +50,7 @@ services:
 
 volumes:
   db-data:
+  redis-data:
 
 networks:
   miaokeeper:
