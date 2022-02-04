@@ -411,9 +411,10 @@ func UpdateCredit(user *CreditInfo, method UpdateMethod, value int64) *CreditInf
 				username = VALUES(username),
 				credit = VALUES(credit)
 			`, Abs(realGroup)), user.ID, user.Name, user.Username, user.Credit)
-	} else {
+	} else if realGroup == user.GroupId {
+		// when the method is UMDel, do not delete aliased credit
 		query, err = MYSQLDB.Query(fmt.Sprintf(`DELETE FROM MiaoKeeper_Credit_%d
-			WHERE userid = ?;`, Abs(realGroup)), user.ID)
+			WHERE userid = ?;`, Abs(user.GroupId)), user.ID)
 	}
 	if err != nil {
 		DErrorE(err, "Database Credit Update Error")
