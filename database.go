@@ -45,6 +45,7 @@ type GroupConfig struct {
 	ID            int64
 	Admins        []int64
 	BannedForward []int64
+	MergeTo       int64
 
 	Locale           string
 	MustFollow       string
@@ -131,6 +132,15 @@ func WriteConfig(key, value string) {
 	if q != nil {
 		q.Close()
 	}
+}
+
+func GetAliasedGroup(groupId int64) int64 {
+	if gc := GetGroupConfig(groupId); gc != nil {
+		if gc.MergeTo < 0 {
+			return gc.MergeTo
+		}
+	}
+	return groupId
 }
 
 func GetGroupConfig(groupId int64) *GroupConfig {
@@ -293,11 +303,12 @@ func UpdateGroup(groupId int64, method UpdateMethod) bool {
 
 func GetCredit(groupId, userId int64) *CreditInfo {
 	ret := &CreditInfo{}
-	err := MYSQLDB.QueryRow(fmt.Sprintf(`SELECT userid, name, username, credit FROM MiaoKeeper_Credit_%d WHERE userid = ?;`, Abs(groupId)), userId).Scan(
+	realGroup := GetAliasedGroup(groupId)
+	err := MYSQLDB.QueryRow(fmt.Sprintf(`SELECT userid, name, username, credit FROM MiaoKeeper_Credit_%d WHERE userid = ?;`, Abs(realGroup)), userId).Scan(
 		&ret.ID, &ret.Name, &ret.Username, &ret.Credit,
 	)
 	if err != nil {
-		DLogf("Database Credit Read Error | gid=%d uid=%d error=%s", groupId, userId, err.Error())
+		DLogf("Database Credit Read Error | gid=%d rgid=%d uid=%d error=%s", groupId, realGroup, userId, err.Error())
 	}
 	if ret.ID == userId {
 		ret.GroupId = groupId
@@ -307,7 +318,8 @@ func GetCredit(groupId, userId int64) *CreditInfo {
 
 func GetCreditRank(groupId int64, limit int) []*CreditInfo {
 	returns := []*CreditInfo{}
-	row, _ := MYSQLDB.Query(fmt.Sprintf(`SELECT userid, name, username, credit FROM MiaoKeeper_Credit_%d ORDER BY credit DESC LIMIT ?;`, Abs(groupId)), limit)
+	realGroup := GetAliasedGroup(groupId)
+	row, _ := MYSQLDB.Query(fmt.Sprintf(`SELECT userid, name, username, credit FROM MiaoKeeper_Credit_%d ORDER BY credit DESC LIMIT ?;`, Abs(realGroup)), limit)
 	for row.Next() {
 		ret := &CreditInfo{}
 		row.Scan(&ret.ID, &ret.Name, &ret.Username, &ret.Credit)
@@ -320,6 +332,7 @@ func GetCreditRank(groupId int64, limit int) []*CreditInfo {
 	return returns
 }
 
+// does not apply MergeTo
 func DumpCredits(groupId int64) [][]string {
 	ret := [][]string{}
 	id, name, username, credit := int64(0), "", "", int64(0)
@@ -336,6 +349,7 @@ func DumpCredits(groupId int64) [][]string {
 	return ret
 }
 
+// does not apply MergeTo
 func FlushCredits(groupId int64, records [][]string) {
 	if len(records) == 0 {
 		return
@@ -386,6 +400,7 @@ func UpdateCredit(user *CreditInfo, method UpdateMethod, value int64) *CreditInf
 	var query *sql.Rows
 	var err error
 
+	realGroup := GetAliasedGroup(user.GroupId)
 	if method != UMDel {
 		query, err = MYSQLDB.Query(fmt.Sprintf(`INSERT INTO MiaoKeeper_Credit_%d
 				(userid, name, username, credit)
@@ -395,10 +410,10 @@ func UpdateCredit(user *CreditInfo, method UpdateMethod, value int64) *CreditInf
 				name = VALUES(name),
 				username = VALUES(username),
 				credit = VALUES(credit)
-			`, Abs(user.GroupId)), user.ID, user.Name, user.Username, user.Credit)
+			`, Abs(realGroup)), user.ID, user.Name, user.Username, user.Credit)
 	} else {
 		query, err = MYSQLDB.Query(fmt.Sprintf(`DELETE FROM MiaoKeeper_Credit_%d
-			WHERE userid = ?;`, Abs(user.GroupId)), user.ID)
+			WHERE userid = ?;`, Abs(realGroup)), user.ID)
 	}
 	if err != nil {
 		DErrorE(err, "Database Credit Update Error")
@@ -407,7 +422,7 @@ func UpdateCredit(user *CreditInfo, method UpdateMethod, value int64) *CreditInf
 		query.Close()
 	}
 
-	DLogf("Update Credit | group=%d user=%d alter=%d credit=%d", Abs(user.GroupId), user.ID, method, value)
+	DLogf("Update Credit | gid=%d rgid=%d user=%d alter=%d credit=%d", user.GroupId, realGroup, user.ID, method, value)
 
 	return user
 }
