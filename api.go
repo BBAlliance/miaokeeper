@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var consumeLock,addLock sync.Mutex
+var consumeLock,BonusLock sync.Mutex
 
 func GinError(err string) gin.H {
 	return gin.H{
@@ -108,19 +108,18 @@ func InitRESTServer(portNum int) {
 					}
 				}
 			})
-			credit.POST("/:userId/add", func(c *gin.Context) {
-				addLock.Lock()
-				defer addLock.Unlock()
+			credit.POST("/:userId/bonus", func(c *gin.Context) {
+				bonusLock.Lock()
+				defer bonusLock.Unlock()
 
 				if ci := GinParseUser(c); ci != nil {
-					addRequest := struct {
+					bonusRequest := struct {
 						Credit        int64 `json:"credit,omitempty"`
 					}{}
-					c.BindJSON(&addRequest)
-					if addRequest.Credit > 0 {
-						ci = UpdateCredit(ci, UMAdd, addRequest.Credit, OPByAPIAdd)
+					c.BindJSON(&bonusRequest)
+					if bonusRequest.Credit > 0 {
+						ci = UpdateCredit(ci, UMAdd, bonusRequest.Credit, OPByAPIbBonus)
 						c.JSON(http.StatusOK, GinData(ci))
-						
 					} else {
 						c.JSON(http.StatusBadRequest, GinError("added credit should be a positive number."))
 					}

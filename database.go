@@ -50,7 +50,7 @@ const (
 	OPByPolicy     OPReasons = "POLICY"
 	OPByAbuse      OPReasons = "ABUSE"
 	OPByAPIConsume OPReasons = "CONSUME"
-	OPByAPIAdd     OPReasons = "ADD"
+	OPByAPIBonus   OPReasons = "BONUS"
 	OPByCleanUp    OPReasons = "CLEANUP"
 )
 
