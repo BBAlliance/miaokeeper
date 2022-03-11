@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var consumeLock,BonusLock sync.Mutex
+var consumeLock,bonusLock sync.Mutex
 
 func GinError(err string) gin.H {
 	return gin.H{
