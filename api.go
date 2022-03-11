@@ -118,7 +118,7 @@ func InitRESTServer(portNum int) {
 					}{}
 					c.BindJSON(&bonusRequest)
 					if bonusRequest.Credit > 0 {
-						ci = UpdateCredit(ci, UMAdd, bonusRequest.Credit, OPByAPIbBonus)
+						ci = UpdateCredit(ci, UMAdd, bonusRequest.Credit, OPByAPIBonus)
 						c.JSON(http.StatusOK, GinData(ci))
 					} else {
 						c.JSON(http.StatusBadRequest, GinError("added credit should be a positive number."))
