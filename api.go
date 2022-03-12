@@ -9,7 +9,7 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-var consumeLock,bonusLock sync.Mutex
+var consumeLock sync.Mutex
 
 func GinError(err string) gin.H {
 	return gin.H{
@@ -109,8 +109,8 @@ func InitRESTServer(portNum int) {
 				}
 			})
 			credit.POST("/:userId/bonus", func(c *gin.Context) {
-				bonusLock.Lock()
-				defer bonusLock.Unlock()
+				consumeLock.Lock()
+				defer consumeLock.Unlock()
 
 				if ci := GinParseUser(c); ci != nil {
 					bonusRequest := struct {
