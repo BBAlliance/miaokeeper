@@ -140,7 +140,7 @@ systemctl status miaokeeper.service                 #查看miaokeeper状态
 -redis string          #redis连接地址，通过redis提升后台计时器的可用性和容错率，例如 'password@your.ip.address:port'
 -ping                  #测试bot和电报服务器之间的往返时间
 -token string          #电报机器人令牌
--upstream string       #电报上游api url
+-upstream string       #电报上游api url （可选）
 -verbose               #显示所有日志
 -version               #显示当前版本并退出
 
@@ -170,6 +170,9 @@ systemctl status miaokeeper.service                 #查看miaokeeper状态
 /del_admin            #删除群组管理
 /ban_forward          #封禁频道转发（回复转发或频道iD）
 /unban_forward        #解禁频道转发（回复转发或频道iD）
+/export_policy        #导出规则
+/import_policy        #导入规则
+/export_token         #导出群API Token
 /set_credit           #回复或id设置积分
 /add_credit           #回复或id添加积分
 /check_credit         #查看某群友积分
@@ -190,4 +193,204 @@ systemctl status miaokeeper.service                 #查看miaokeeper状态
 /version       #版本查询
 /transfer      #回复一个用户来完成积分转移
 /ping          #检测bot和群组响应速度
+```
+### Policy jSON相关解释
+
+`CreditMapping`     是自定义群里说话的积分表现，很多双倍积分就是修改这里
+
+`UnderAttackMode`   开启会把验证时间缩短到30喵，并且一旦踢出是永久封
+
+`RedPacketCaptcha`  是是否启用红包验证码
+
+`RedPacketCaptchaFailCreditBehavior`    点击不正确的验证码处理方式（如果是正的，就是补偿分，负的就是扣分）
+
+`CustomReply`   就是关键词回复
+
+`NameBlackListReg`  自动放逐是 
+
+`Match`     是什么关键词可以触发这个规则
+
+`Name`  是规则ID，如果 Name 一样，计数器就会一样，（比如多个规则共享一个 InvokeOptions计数器，这个用法太高级，暂时不用详细写。就让他们别用重复的 Name 就好）
+
+`Limit`     是这个规则累计能被触发多少次
+
+`CreditBehavior`    是触发了这个规则会不会对用户积分发生变动（正就是加分，负就是扣分）
+
+`NoForceCreditBehaviorError`    是指如果 CreditBehavior 是扣用户分的，但是用户没那么多分，展示什么错误消息（空就是不展示错误消息）
+
+`CallbackURL`   规则被触发以后调用什么回调函数（例如 https://api.xxxx.com/someapi）调用的时候会附带上群组 token (可以 /export_token 查看，里面有回调token，这样可以防止别人非法掉用回调函数，以确保这个请求一定是 miaokeeper 发出来的，不是别人 curl 或者其他方式伪造的)
+
+`ReplyMessage`  触发规则以后回复什么消息，（所有消息都是 markdown 语法，包括 NoForceCreditBehaviorError 也是，`{{xxx}}` 可以调用内部函数 ，比如 `{{UserName}}` 表示用户名 `{{UserLink}}` 表示用户链接，用截图里的那个方式就可以表现为 at 那个用户）
+
+`ReplyTo`   怎么发这个消息 可以为 message group private，分别表示回复这则消息，不回复直接发送，私聊发送者。默认为 message
+
+`ReplyButtons`  是是否添加按钮，为数组，一个一行，编写方式为：`按钮文字|按钮命令 ` 多个个一行，编写方式为：`按钮文字|按钮命令||按钮文字2|按钮命令2`如果按钮命令是链接，就是个链接按钮。否则可以是内部指令。比如 `close` 就是删除按钮消息（其他暂时是内部用的，可以不用披露）。
+
+`ReplyMode`     是回复模式，可以为 `deleteself`, `deleteorigin`, `deleteboth` 表示为 10秒后只删除 `ReplyMessage` 发送的消息、10秒后只删除触发这个规则的消息，10秒后两个消息都删
+
+`ReplyImage`     回复消息的头图，可以让 ReplyMessage 更好看
+
+`InvokeOptions`     用户触发规则（之前的定义都是全局的，即便是 limit 也是只这个规则总的来说能触发多少次，但并没有限制单个用户是否能触发/触发多少次。1.14以后加了这个选项来对这个功能进行补足）
+
+**下面都是 InvokeOptions 下的配置：**
+
+`Rule`  指定用户触发规则，可以为 `unlimit`, `peruser`, `peruserinterval`, `peruserday` 表示为不限制。限制一个用户能触发多少次，限制一个用户多少时间（second）能触发一次，限制用户每天能触发多少次。默认为不限制
+
+`Value`     只 Rule 里面的多少
+
+`ShowError`     用户超出限制以后是否展示错误信息
+
+`Reset`     导入规则以后是否重置计数器（如果false假使设定了peruserday value=1即便/import_policy更新规则，今天触发过的用户还是触发不了）
+
+`UserOnly`  只有用户能触发，匿名不能触发
+
+### Policy案例
+```
+{
+  "ID": 群ID,
+  "Admins": [
+    AdminID
+  ],
+  "BannedForward": [],
+  "MergeTo": 0,
+  "Locale": "zh",
+  "MustFollow": "",
+  "MustFollowOnJoin": false,
+  "MustFollowOnMsg": false,
+  "GroupAPISignSeed": "",
+  "CreditMapping": {
+    "PerValidTextMessage": 1,
+    "PerValidStickerMessage": 1,
+    "Command": -1,
+    "Duplicated": -2,
+    "Warn": -10,
+    "Ban": -50,
+    "BanBouns": 15,
+    "HourlyUpperBound": 30
+  },
+  "UnderAttackMode": false,
+  "AntiSpoiler": false,
+  "DisableWarn": false,
+  "RedPacketCaptcha": true,
+  "RedPacketCaptchaFailCreditBehavior": -5,
+  "WarnKeywords": [
+    "warn",
+    "/warn",
+    "/sb"
+  ],
+  "BanKeywords": [
+    "ban",
+    "/ban"
+  ],
+  "NameBlackListReg": [  
+    "^关键词",
+    "关键词2"
+  ],
+  "CustomReply": [
+    {
+      "Match": "^关键词$|^关键词2$|^关键词3$",
+      "Name": "细则名称",
+      "Limit": -1,
+      "CreditBehavior": 0,
+      "NoForceCreditBehaviorError": "",
+      "CallbackURL": "",
+      "ReplyMessage": "⬇️ [{{UserName}}]({{UserLink}})，请点击下面链接进入相关的页面哦 ～",
+      "ReplyTo": "",
+      "ReplyButtons": [
+        "Link1|https://baidu.com||Link2|https://google.com",
+        "Link3|https://baidu.com||Link4|https://google.com",
+        "👌 知道啦|close"
+      ],
+      "ReplyMode": "",
+      "ReplyImage": "",
+      "InvokeOptions": {
+        "Rule": "unlimit",
+        "Value": 0,
+        "ShowError": true,
+        "Reset": false,
+        "UserOnly": true
+      }
+    },
+    {
+      "Match": "://|\\.com|\\.me|\\.cn|\\.cc|\\.xyz|\\.ml|\\.pub|\\.la|\\.pro|\\.us|\\.biz|\\.name|\\.jp",
+      "Name": "禁止链接",
+      "Limit": -1,
+      "CreditBehavior": -30,
+      "NoForceCreditBehaviorError": "",
+      "CallbackURL": "",
+      "ReplyMessage": "😠 [{{UserName}}]({{UserLink}})，请不要发送链接哦 …",
+      "ReplyTo": "",
+      "ReplyButtons": [],
+      "ReplyMode": "deleteboth",
+      "ReplyImage": "",
+      "InvokeOptions": {
+        "Rule": "unlimit",
+        "Value": 0,
+        "ShowError": true,
+        "Reset": false,
+        "UserOnly": false
+      }
+    },
+    {
+      "Match": "关键词1|关键词2|关键词3|关键词4",
+      "Name": "禁止广告",
+      "Limit": -1,
+      "CreditBehavior": -30,
+      "NoForceCreditBehaviorError": "",
+      "CallbackURL": "",
+      "ReplyMessage": "😠 [{{UserName}}]({{UserLink}})，请不要发送广告哦 …",
+      "ReplyTo": "",
+      "ReplyButtons": [],
+      "ReplyMode": "deleteboth",
+      "ReplyImage": "",
+      "InvokeOptions": {
+        "Rule": "unlimit",
+        "Value": 0,
+        "ShowError": true,
+        "Reset": false,
+        "UserOnly": false
+      }
+    },
+    {
+      "Match": "^积分规则|积分怎么获得|积分查看|^积分$|^获取积分|^获得积分|^怎么获取积分|^怎么获得积分",
+      "Name": "积分规则",
+      "Limit": -1,
+      "CreditBehavior": 0,
+      "NoForceCreditBehaviorError": "",
+      "CallbackURL": "",
+      "ReplyMessage": "⬇️ [{{UserName}}]({{UserLink}})您好，积分查看命令为 `/mycredit`,本群积分规则为：水群聊天增加 **1** 点，使用指令扣除 **1** 点积分，刷屏扣除 **10** 点积分。另可以每日签到来获取积分，指令有： `/签到` 等 ～",
+      "ReplyTo": "",
+      "ReplyButtons": [],
+      "ReplyMode": "",
+      "ReplyImage": "",
+      "InvokeOptions": {
+        "Rule": "unlimit",
+        "Value": 0,
+        "ShowError": true,
+        "Reset": false,
+        "UserOnly": true
+      }
+    },
+    {
+      "Match": "^/che|^/chi|^/cke|^/kfc|^/mac|^/crazy|^/qian|^/turkey|^/shakeshark|^/签到|^/疯狂|^/打卡|^/hase|^签到$|^打卡",
+      "Name": "每日签到",
+      "Limit": -1,
+      "CreditBehavior": 15,
+      "NoForceCreditBehaviorError": "",
+      "CallbackURL": "",
+      "ReplyMessage": "🎉[{{UserName}}]({{UserLink}}),感谢您的签到,15分到账~~",
+      "ReplyTo": "",
+      "ReplyButtons": [],
+      "ReplyMode": "deleteboth",
+      "ReplyImage": "",
+      "InvokeOptions": {
+        "Rule": "peruserday",
+        "Value": 1,
+        "ShowError": true,
+        "Reset": false,
+        "UserOnly": true
+      }
+    }
+  ]
+}
 ```
